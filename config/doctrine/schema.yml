@@ -1,0 +1,22 @@
+---
+Token:
+  columns:
+    id: 
+      type: integer
+      primary: true
+      autoincrement: true
+    name: string(127)
+    token_key: string(255)
+    token_secret: string(255)
+    user_id: integer
+    status: integer(2)
+  relations: 
+    User:
+      class: sfGuardUser
+      type: one
+      foreignType: many
+      local: user_id
+      foreign: id
+      foreignAlias: Tokens
+  actAs:
+    Timestampable: ~
