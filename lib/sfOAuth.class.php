@@ -17,6 +17,8 @@ abstract class sfOAuth
 
   protected $name;
 
+  protected $callback;
+
   protected $parameters = array();
 
   public function __construct($key, $secret, Token $token = null, $config = array())
@@ -33,13 +35,9 @@ abstract class sfOAuth
     $this->initialize($config);
   }
 
-  public static function getInstance($config)
+  public static function findToken($service, $user = null)
   {
-    $version = isset($config['version'])?$config['version']:null;
-    $provider = isset($config['provider'])?$config['provider']:null;
-    $key = isset($config['key'])?$config['key']:null;
-    $secret = isset($config['secret'])?$config['secret']:null;
-    $token = isset($config['token'])?$config['token']:null;
+    return Doctrine::getTable('Token')->findOneByNameAndUserId($service, $user);
   }
 
   abstract protected function initialize($config);
@@ -73,7 +71,7 @@ abstract class sfOAuth
   }
 
   /**
-   * @return OAuthToken
+   * @return Token
    *
    *
    * Enter description here ...
@@ -81,12 +79,23 @@ abstract class sfOAuth
    * @author Maxime Picaud
    * @since 12 août 2010
    */
-  public function getToken()
+  public function getToken($format = 'token')
   {
+    if($format == 'oauth')
+    {
+      if(!is_null($this->token))
+      {
+        return $this->token->toOAuthToken();
+      }
+      else
+      {
+        return null;
+      }
+    }
     return $this->token;
   }
 
-  public function setToken(OAuthToken $token)
+  public function setToken(Token $token)
   {
     $this->token = $token;
   }
@@ -147,6 +156,8 @@ abstract class sfOAuth
     {
       $callback = $this->getController()->genUrl($callback, true);
     }
+
+    $this->getController()->convertUrlStringToParameters($callback);
 
     $this->callback = $callback;
     $this->setParameter('oauth_callback', $callback);

@@ -29,12 +29,18 @@ class sfOAuth1 extends sfOAuth
 
   public function getRequestToken()
   {
-    $request = OAuthRequest::from_consumer_and_token($this->getConsumer(), $this->getToken(), 'POST', $this->getRequestTokenUrl(), $this->getParameters());
-    $request->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $this->getConsumer(), $this->getToken());
-    //echo $this->call($this->getRequestTokenUrl(), $request); die();
+    $request = OAuthRequest::from_consumer_and_token($this->getConsumer(), $this->getToken('oauth'), 'POST', $this->getRequestTokenUrl(), $this->getParameters());
+    $request->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $this->getConsumer(), $this->getToken('oauth'));
+
     $params = OAuthUtil::parse_parameters($this->call($this->getRequestTokenUrl(), $request));
-    //var_dump($params);die();
-    $this->setToken(new OAuthToken($params['oauth_token'], $params['oauth_token_secret']));
+
+    $token = new Token();
+    $token->setTokenKey($params['oauth_token']);
+    $token->setTokenSecret($params['oauth_token_secret']);
+    $token->setStatus(Token::STATUS_REQUEST);
+    $token->setName($this->getName());
+
+    $this->setToken($token);
 
     return $params;
   }
@@ -43,7 +49,7 @@ class sfOAuth1 extends sfOAuth
   {
     if($this->getController())
     {
-      $this->getController()->redirect($this->getRequestAuthUrl().'?oauth_token='.$this->getToken()->key);
+      $this->getController()->redirect($this->getRequestAuthUrl().'?oauth_token='.$this->getToken()->getTokenKey());
     }
   }
 
@@ -51,13 +57,19 @@ class sfOAuth1 extends sfOAuth
   {
     $this->setParameter('oauth_verifier', $verifier);
 
-    $request = OAuthRequest::from_consumer_and_token($this->getConsumer(), $this->getToken(), 'POST', $this->getAccessTokenUrl(), $this->getParameters());
-    $request->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $this->getConsumer(), $this->getToken());
+    $request = OAuthRequest::from_consumer_and_token($this->getConsumer(), $this->getToken('oauth'), 'POST', $this->getAccessTokenUrl(), $this->getParameters());
+    $request->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $this->getConsumer(), $this->getToken('oauth'));
 
     $params = OAuthUtil::parse_parameters($this->call($this->getAccessTokenUrl(), $request));
 
+    $token = new Token();
+    $token->setTokenKey($params['oauth_token']);
+    $token->setTokenSecret($params['oauth_token_secret']);
+    $token->setStatus(Token::STATUS_ACCESS);
+    $token->setName($this->getName());
+
     //override request_token
-    $this->setToken(new OAuthToken($params['oauth_token'], $params['oauth_token_secret']));
+    $this->setToken($token);
 
     //return $params for extra params - bof bof ca s'appelle getAccessToken donc -> Token
     return $params;
@@ -68,7 +80,10 @@ class sfOAuth1 extends sfOAuth
     $this->getRequestToken();
 
     //store token in the user session
-    $user->setAttribute('token', $this->getToken());
+    $token = $this->getToken();
+    $token->setUser($user);
+
+    $token->save();
 
     $this->requestAuth($this->getController());
   }

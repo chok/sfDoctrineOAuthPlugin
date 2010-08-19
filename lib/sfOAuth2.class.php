@@ -24,14 +24,19 @@ class sfOAuth2 extends sfOAuth
 
     $params = $this->call($url, null, 'GET');
     $params = OAuthUtil::parse_parameters($params);
-    $this->setToken(new OAuthToken($params['access_token'], null));
+
+    $token = new Token();
+    $token->setTokenKey($params['access_token']);
+    $token->setStatus(Token::STATUS_ACCESS);
+    $token->setName($this->getName());
+
+    $this->setToken($token);
 
     return $params;
   }
 
   public function connect($user)
   {
-    $user->setAttribute('provider', $this->getName());
     $this->requestAuth($this->getController());
   }
 
