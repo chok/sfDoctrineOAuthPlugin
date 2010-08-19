@@ -13,6 +13,9 @@ abstract class sfOAuth
   protected $request_auth_url;
   protected $access_token_url;
 
+  protected $namespaces;
+  protected $current_namespace;
+
   protected $controller;
 
   protected $name;
@@ -198,6 +201,31 @@ abstract class sfOAuth
     $this->parameters = array_merge($this->parameters, $parameters);
   }
 
+  public function setNamespaces($namespaces)
+  {
+    $this->namespaces = $namespaces;
+  }
+
+  public function setNamespace($key, $value)
+  {
+    $this->namespaces[$key] = $value;
+  }
+
+  public function getNamespaces()
+  {
+    return $this->namespaces;
+  }
+
+  public function getNamespace($key)
+  {
+    return isset($this->namespaces[$key])?$this->namespaces[$key]:$default;
+  }
+
+  public function addNamespaces($namespaces)
+  {
+    $this->namespaces = array_merge($this->namespaces, $namespaces);
+  }
+
   protected function call($url, $request, $method = 'POST')
   {
     $ci = curl_init();
@@ -214,5 +242,44 @@ abstract class sfOAuth
     curl_close ($ci);
 
     return $response;
+  }
+
+  public function ns($namespace)
+  {
+    if(in_array($ns, array_keys($this->namespaces)))
+    {
+      $this->current_namespace = $ns;
+    }
+    else
+    {
+      throw new sfException(sprintf('Namespace "%s" is not defined for Melody "%s"', $ns, get_class($this)));
+    }
+
+    return $this;
+  }
+
+  public function getCurrentNamespace()
+  {
+    if(is_null($this->current_namespace))
+    {
+      $this->current_namespace = 'default';
+    }
+
+    return $this->current_namespace;
+  }
+
+  public function getDefaultParamaters()
+  {
+    return array();
+  }
+
+  public function __call($method, $arguments)
+  {
+     $params = explode('_',sfInflector::tableize($method));
+
+     $callable = array($this, array_shift($params));
+     array_unshift($arguments, implode('/', $params));
+
+     return call_user_func_array($callable, $arguments);
   }
 }

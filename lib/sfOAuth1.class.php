@@ -87,4 +87,43 @@ class sfOAuth1 extends sfOAuth
 
     $this->requestAuth($this->getController());
   }
+
+  /**
+   * TODO a refaire method etc...
+   * @param unknown_type $action
+   * @param unknown_type $params
+   * @param unknown_type $method
+   *
+   * Enter description here ...
+   *
+   * @author Maxime Picaud
+   * @since 19 août 2010
+   */
+  public function get($action,$url_params = null, $params = array(), $method = 'GET')
+  {
+    $base_url = $this->getNamespace($this->getCurrentNamespace());
+
+    $params = array_merge($params, $this->getDefaultParamaters());
+    $url = $base_url.'/'.$action;
+
+    if(is_string($url_params))
+    {
+      $url .= '/'.$url_params;
+    }
+    elseif(is_array($url_params))
+    {
+      foreach($url_params as $key => $param)
+      {
+        $url = preg_replace('/\/'.$key.'(\/|$)/', '/'.$param.'$1', $url);
+      }
+    }
+
+    $request = OAuthRequest::from_consumer_and_token($this->getConsumer(), $this->getToken('oauth'), 'GET', $url, $params);
+    $request->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $this->getConsumer(), $this->getToken('oauth'));
+
+    $url = $request->to_url();
+
+    //json !!
+    return json_decode($this->call($url, null, 'GET'));
+  }
 }

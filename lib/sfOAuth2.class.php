@@ -23,6 +23,7 @@ class sfOAuth2 extends sfOAuth
     $url = $this->getAccessTokenUrl().sprintf('?client_id=%s&redirect_uri=%s&client_secret=%s&code=%s', $this->getKey(), $this->getCallback(), $this->getSecret(), $verifier);
 
     $params = $this->call($url, null, 'GET');
+
     $params = OAuthUtil::parse_parameters($params);
 
     $token = new Token();
@@ -38,6 +39,47 @@ class sfOAuth2 extends sfOAuth
   public function connect($user)
   {
     $this->requestAuth($this->getController());
+  }
+
+  /**
+   * TODO a refaire method etc...
+   * @param unknown_type $action
+   * @param unknown_type $params
+   * @param unknown_type $method
+   *
+   * Enter description here ...
+   *
+   * @author Maxime Picaud
+   * @since 19 août 2010
+   */
+  public function get($action,$url_params = null, $params = array(), $method = 'GET')
+  {
+    $base_url = $this->getNamespace($this->getCurrentNamespace());
+
+    $params = array_merge($params, $this->getDefaultParamaters());
+    $url = $base_url.'/'.$action;
+
+    if(is_string($url_params))
+    {
+      $url .= '/'.$url_params;
+    }
+    elseif(is_array($url_params))
+    {
+      foreach($url_params as $key => $param)
+      {
+        $url = preg_replace('/\/'.$key.'(\/|$)/', '/'.$param.'$1', $url);
+      }
+    }
+
+    $url .= '?access_token='.$this->getToken()->getTokenKey();
+
+    $params = http_build_query($params);
+    if(strlen($params) > 0)
+    {
+      $url .= '&'.$params;
+    }
+
+    return json_decode($this->call($url, null, 'GET'));
   }
 
 
