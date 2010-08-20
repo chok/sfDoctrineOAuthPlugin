@@ -30,10 +30,25 @@ class sfOAuth2 extends sfOAuth
     $token->setTokenKey($params['access_token']);
     $token->setStatus(Token::STATUS_ACCESS);
     $token->setName($this->getName());
+    $token->setOauthVersion($this->getVersion());
+
+
+    unset($params['access_token']);
+
+    if(count($params) > 0)
+    {
+      $token->setParams($params);
+    }
+
+    $this->setExpire($token);
 
     $this->setToken($token);
 
-    return $params;
+    //get identifier maybe need the access token
+    $token->setIdentifier($this->getIdentifier());
+    $this->setToken($token);
+
+    return $token;
   }
 
   public function connect($user)
@@ -81,6 +96,4 @@ class sfOAuth2 extends sfOAuth
 
     return json_decode($this->call($url, null, 'GET'));
   }
-
-
 }

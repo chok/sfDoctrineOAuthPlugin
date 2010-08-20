@@ -48,6 +48,21 @@ abstract class sfOAuth
   abstract public function getAccessToken($verifier);
   abstract public function connect($user);
 
+  public function getIdentifier()
+  {
+    return mt_rand(0, 99999);
+  }
+
+  public function refreshToken()
+  {
+    //nothing to do. Some need refresh, some don't.
+  }
+
+  protected function setExpire(&$token)
+  {
+    //nothing to do. implements in OAuth class concerned by expiration.
+  }
+
   public function getVersion()
   {
     return $this->version;
@@ -271,6 +286,21 @@ abstract class sfOAuth
   public function getDefaultParamaters()
   {
     return array();
+  }
+
+  public function getDefaultUrlParamaters()
+  {
+    return array();
+  }
+
+  public function applyUrlParams($url, $url_params)
+  {
+    foreach($url_params as $key => $param)
+    {
+      $url = preg_replace('/\/'.$key.'(\/|$)/', '/'.$param.'$1', $url);
+    }
+
+    return $url;
   }
 
   public function __call($method, $arguments)

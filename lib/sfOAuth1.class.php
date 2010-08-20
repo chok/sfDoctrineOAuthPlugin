@@ -39,10 +39,17 @@ class sfOAuth1 extends sfOAuth
     $token->setTokenSecret($params['oauth_token_secret']);
     $token->setStatus(Token::STATUS_REQUEST);
     $token->setName($this->getName());
+    $token->setOauthVersion($this->getVersion());
+
+    unset($params['oauth_token'], $params['oauth_token_secret']);
+    if(count($params) > 0)
+    {
+      $token->setParams($params);
+    }
 
     $this->setToken($token);
 
-    return $params;
+    return $token;
   }
 
   public function requestAuth()
@@ -67,23 +74,31 @@ class sfOAuth1 extends sfOAuth
     $token->setTokenSecret($params['oauth_token_secret']);
     $token->setStatus(Token::STATUS_ACCESS);
     $token->setName($this->getName());
+    $token->setOauthVersion($this->getVersion());
+
+    unset($params['oauth_token'], $params['oauth_token_secret']);
+    if(count($params) > 0)
+    {
+      $token->setParams($params);
+    }
+
+    $this->setExpire($token);
 
     //override request_token
     $this->setToken($token);
 
-    //return $params for extra params - bof bof ca s'appelle getAccessToken donc -> Token
-    return $params;
+    $token->setIdentifier($this->getIdentifier());
+    $this->setToken($token);
+
+    return $token;
   }
 
   public function connect($user)
   {
-    $this->getRequestToken();
+    $token = $this->getRequestToken();
 
     //store token in the user session
-    $token = $this->getToken();
-    $token->setUser($user);
-
-    $token->save();
+    $user->setAttribute($this->getName().'_request_token', serialize($token));
 
     $this->requestAuth($this->getController());
   }
@@ -103,7 +118,8 @@ class sfOAuth1 extends sfOAuth
   {
     $base_url = $this->getNamespace($this->getCurrentNamespace());
 
-    $params = array_merge($params, $this->getDefaultParamaters());
+    $params = array_merge($this->getDefaultParamaters(), $params);
+
     $url = $base_url.'/'.$action;
 
     if(is_string($url_params))
@@ -112,11 +128,15 @@ class sfOAuth1 extends sfOAuth
     }
     elseif(is_array($url_params))
     {
-      foreach($url_params as $key => $param)
-      {
-        $url = preg_replace('/\/'.$key.'(\/|$)/', '/'.$param.'$1', $url);
-      }
+      $url_params = array_merge($this->getDefaultUrlParamaters(), $url_params);
     }
+
+    if(!is_array($url_params))
+    {
+      $url_params = $this->getDefaultUrlParamaters();
+    }
+
+    $url = $this->applyUrlParams($url, $url_params);
 
     $request = OAuthRequest::from_consumer_and_token($this->getConsumer(), $this->getToken('oauth'), 'GET', $url, $params);
     $request->sign_request(new OAuthSignatureMethod_HMAC_SHA1(), $this->getConsumer(), $this->getToken('oauth'));

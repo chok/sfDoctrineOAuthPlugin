@@ -70,6 +70,8 @@ class PluginTokenTable extends Doctrine_Table
     {
       $q->addWhere('t.user_id = ?', $user->getId());
     }
+
+    return $q;
   }
 
   public function deleteTokens($name = null, $user = null, $status = null)
@@ -77,5 +79,15 @@ class PluginTokenTable extends Doctrine_Table
     $q = $this->getDeleteTokenQuery($name, $user, $status);
 
     $q->execute();
+  }
+
+  public function findByNameAndIdentifier($name, $identifier)
+  {
+    $q = $this->createQuery('t')
+              ->where('t.name = ?', $name)
+              ->addWhere('t.identifier = ?', $identifier)
+              ->limit(1);
+
+    return $q->fetchOne();
   }
 }

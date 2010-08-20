@@ -10,6 +10,10 @@ Token:
     token_secret: string(255)
     user_id: integer
     status: integer(2)
+    oauth_version: integer(2)
+    expire: timestamp
+    params: clob
+    identifier: string(255)
   relations: 
     User:
       class: sfGuardUser
