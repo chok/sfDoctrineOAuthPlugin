@@ -1,37 +1,82 @@
 <?php
+/**
+ *
+ *
+ *
+ * Implementation for OAuth version 2
+ *
+ * @author Maxime Picaud
+ * @since 21 août 2010
+ */
 class sfOAuth2 extends sfOAuth
 {
-  public function __construct($key, $secret, OAuthToken $token = null, $config = array())
+  /**
+   * Constructor - set version to 2
+   *
+   * @author Maxime Picaud
+   * @since 21 août 2010
+   */
+  public function __construct($key, $secret, $token = null, $config = array())
   {
     $this->version = 2;
 
     parent::__construct($key, $secret, $token, $config);
   }
 
+  /**
+   * (non-PHPdoc)
+   * @see plugins/sfDoctrineOAuthPlugin/lib/sfOAuth::initialize()
+   */
   protected function initialize($config) {}
 
-  public function requestAuth()
+  /**
+   * (non-PHPdoc)
+   * @see plugins/sfDoctrineOAuthPlugin/lib/sfOAuth::requestAuth()
+   */
+  public function requestAuth($parameters = array())
   {
     if($this->getController())
     {
-      $this->getController()->redirect($this->getRequestAuthUrl().sprintf('?client_id=%s&redirect_uri=%s', $this->getKey(), $this->getCallback()));
+      $this->setAuthParameter('client_id', $this->getKey());
+      $this->setAuthParameter('redirect_uri', $this->getCallback());
+      $this->addAuthParameters($parameters);
+
+      $this->getController()->redirect($this->getRequestAuthUrl().'?'.http_build_query($this->getAuthParameters()));
     }
   }
 
-  public function getAccessToken($verifier)
+  /**
+   * (non-PHPdoc)
+   * @see plugins/sfDoctrineOAuthPlugin/lib/sfOAuth::getAccessToken()
+   */
+  public function getAccessToken($verifier, $parameters = array())
   {
-    $url = $this->getAccessTokenUrl().sprintf('?client_id=%s&redirect_uri=%s&client_secret=%s&code=%s', $this->getKey(), $this->getCallback(), $this->getSecret(), $verifier);
+    $url = $this->getAccessTokenUrl();
 
-    $params = $this->call($url, null, 'GET');
+    $this->setAccessParameter('client_id', $this->getKey());
+    $this->setAccessParameter('client_secret', $this->getSecret());
+    $this->setAccessParameter('redirect_uri', $this->getCallback());
+    $this->setAccessParameter('code', $verifier);
+
+    $this->addAccessParameters($parameters);
+
+    $params = $this->call($url, $this->getAccessParameters(), 'GET');
 
     $params = OAuthUtil::parse_parameters($params);
 
-    $token = new Token();
-    $token->setTokenKey($params['access_token']);
-    $token->setStatus(Token::STATUS_ACCESS);
-    $token->setName($this->getName());
-    $token->setOauthVersion($this->getVersion());
+    $access_token = isset($params['access_token'])?$params['access_token']:null;
 
+    if(is_null($access_token))
+    {
+      $error = sprintf('{OAuth} access token failed - %s returns %s', $this->getName(), print_r($params, true));
+      sfContext::getInstance()->getLogger()->err($error);
+    }
+
+    $token = new Token();
+    $token->setTokenKey($access_token);
+    $token->setName($this->getName());
+    $token->setStatus(Token::STATUS_ACCESS);
+    $token->setOAuthVersion($this->getVersion());
 
     unset($params['access_token']);
 
@@ -51,49 +96,39 @@ class sfOAuth2 extends sfOAuth
     return $token;
   }
 
-  public function connect($user)
+  /**
+   * (non-PHPdoc)
+   * @see plugins/sfDoctrineOAuthPlugin/lib/sfOAuth::connect()
+   */
+  public function connect($user, $parameters = array())
   {
-    $this->requestAuth($this->getController());
+    $this->requestAuth($parameters);
   }
 
   /**
-   * TODO a refaire method etc...
-   * @param unknown_type $action
-   * @param unknown_type $params
-   * @param unknown_type $method
-   *
-   * Enter description here ...
+   * overriden to support OAuth 2
    *
    * @author Maxime Picaud
    * @since 19 août 2010
    */
-  public function get($action,$url_params = null, $params = array(), $method = 'GET')
+  public function get($action,$aliases = null, $params = array(), $method = 'GET')
   {
-    $base_url = $this->getNamespace($this->getCurrentNamespace());
-
-    $params = array_merge($params, $this->getDefaultParamaters());
-    $url = $base_url.'/'.$action;
-
-    if(is_string($url_params))
+    if(is_null($this->getToken()))
     {
-      $url .= '/'.$url_params;
+      throw new sfException(sprintf('no access token available for "%s"', $this->getName()));
     }
-    elseif(is_array($url_params))
-    {
-      foreach($url_params as $key => $param)
-      {
-        $url = preg_replace('/\/'.$key.'(\/|$)/', '/'.$param.'$1', $url);
-      }
-    }
+    $this->setCallParameter('access_token', $this->getToken()->getTokenKey());
+    $this->addCallParameters($params);
 
-    $url .= '?access_token='.$this->getToken()->getTokenKey();
+    $url = parent::get($action, $aliases, $this->getCallParameters(), $method);
 
-    $params = http_build_query($params);
-    if(strlen($params) > 0)
+    $response = $this->call($url, $this->getCallParameters(), $method);
+
+    if($this->getOutputFormat() == 'json')
     {
-      $url .= '&'.$params;
+      $response = json_decode($response);
     }
 
-    return json_decode($this->call($url, null, 'GET'));
+    return $response;
   }
 }

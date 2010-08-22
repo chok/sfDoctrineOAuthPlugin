@@ -12,8 +12,8 @@
  */
 abstract class PluginToken extends BaseToken
 {
-  const STATUS_ACCESS = 0;
-  const STATUS_REQUEST = 1;
+  const STATUS_ACCESS = 'access';
+  const STATUS_REQUEST = 'request';
 
   public function toOAuthToken()
   {
@@ -27,7 +27,7 @@ abstract class PluginToken extends BaseToken
     $valid = $this->getStatus() == self::STATUS_ACCESS && !empty($key) && !$this->isExpired();
 
 
-    if($this->getOauthVersion() == 1 && $valid)
+    if($this->getOAuthVersion() == 1 && $valid)
     {
       $secret = $this->getTokenSecret();
 

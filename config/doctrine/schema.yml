@@ -6,14 +6,14 @@ Token:
       primary: true
       autoincrement: true
     name: string(127)
-    token_key: string(255)
-    token_secret: string(255)
+    token_key: clob
+    token_secret: clob
     user_id: integer
-    status: integer(2)
-    oauth_version: integer(2)
-    expire: timestamp
+    expire: integer(11)
     params: clob
     identifier: string(255)
+    status: string(127)
+    o_auth_version: integer(2)
   relations: 
     User:
       class: sfGuardUser
