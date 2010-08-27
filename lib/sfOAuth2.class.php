@@ -89,8 +89,9 @@ class sfOAuth2 extends sfOAuth
 
     $this->setToken($token);
 
-    //get identifier maybe need the access token
+    // get identifier maybe need the access token
     $token->setIdentifier($this->getIdentifier());
+
     $this->setToken($token);
 
     return $token;
@@ -111,7 +112,7 @@ class sfOAuth2 extends sfOAuth
    * @author Maxime Picaud
    * @since 19 août 2010
    */
-  public function get($action,$aliases = null, $params = array(), $method = 'GET')
+  public function get($action, $aliases = null, $params = array(), $method = 'GET')
   {
     if(is_null($this->getToken()))
     {

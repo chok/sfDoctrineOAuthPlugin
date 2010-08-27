@@ -951,13 +951,13 @@ abstract class sfOAuth
    */
   public function ns($namespace)
   {
-    if(in_array($ns, array_keys($this->namespaces)))
+    if(in_array($namespace, array_keys($this->namespaces)))
     {
-      $this->current_namespace = $ns;
+      $this->current_namespace = $namespace;
     }
     else
     {
-      throw new sfException(sprintf('Namespace "%s" is not defined for Melody "%s"', $ns, get_class($this)));
+      throw new sfException(sprintf('Namespace "%s" is not defined for Melody "%s"', $namespace, get_class($this)));
     }
 
     return $this;

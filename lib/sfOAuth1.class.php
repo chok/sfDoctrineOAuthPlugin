@@ -171,7 +171,6 @@ class sfOAuth1 extends sfOAuth
     {
       $this->setAuthParameter('oauth_token', $this->getToken()->getTokenKey());
       $this->addAuthParameters($parameters);
-
       $this->getController()->redirect($this->getRequestAuthUrl().'?'.http_build_query($this->getAuthParameters()));
     }
   }
