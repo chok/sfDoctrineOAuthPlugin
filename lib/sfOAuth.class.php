@@ -118,6 +118,11 @@ abstract class sfOAuth
   protected $output_format = 'json';
 
   /**
+   * @var array $config
+   */
+  protected $config;
+
+  /**
    *
    * @param string $key
    * @param string $secret
@@ -134,24 +139,9 @@ abstract class sfOAuth
     $this->setKey($key);
     $this->setSecret($secret);
     $this->setToken($token);
+    $this->setConfig($config);
 
     $this->initialize($config);
-
-    $this->init($config, 'callback');
-    $this->init($config, 'request_auth_url');
-    $this->init($config, 'access_token_url');
-    $this->init($config, 'namespaces');
-    $this->init($config, 'current_namespace');
-    $this->init($config, 'controller');
-    $this->init($config, 'name');
-    $this->init($config, 'callback');
-    $this->init($config, 'auth_parameters', 'add');
-    $this->init($config, 'call_parameters', 'add');
-    $this->init($config, 'access_parameters', 'add');
-    $this->init($config, 'aliases', 'add');
-    $this->init($config, 'output_format');
-
-
   }
 
   /**
@@ -182,7 +172,22 @@ abstract class sfOAuth
    * @author Maxime Picaud
    * @since 21 août 2010
    */
-  abstract protected function initialize($config);
+  protected function initialize($config)
+  {
+    $this->init($config, 'callback');
+    $this->init($config, 'request_auth_url');
+    $this->init($config, 'access_token_url');
+    $this->init($config, 'namespaces');
+    $this->init($config, 'current_namespace');
+    $this->init($config, 'controller');
+    $this->init($config, 'name');
+    $this->init($config, 'callback');
+    $this->init($config, 'auth_parameters', 'add');
+    $this->init($config, 'call_parameters', 'add');
+    $this->init($config, 'access_parameters', 'add');
+    $this->init($config, 'aliases', 'add');
+    $this->init($config, 'output_format');
+  }
 
   /**
    * implemented by child classes to request auth
@@ -355,6 +360,35 @@ abstract class sfOAuth
   public function setToken($token)
   {
     $this->token = $token;
+  }
+
+  /**
+   * getter $config
+   *
+   * @return string
+   *
+   * @author Maxime Picaud
+   * @since 28 août 2010
+   */
+  public function getConfig()
+  {
+    return $this->config;
+  }
+
+  /**
+   *
+   * @param string $config
+   *
+   * setter $config
+   *
+   * @author Maxime Picaud
+   * @since 21 août 2010
+   */
+  public function setConfig($config)
+  {
+    $this->config = $config;
+
+    $this->initialize($config);
   }
 
   /**
@@ -1061,5 +1095,25 @@ abstract class sfOAuth
     }
 
     return $this->applyUrlParams($url, $aliases);
+  }
+
+  public function fromPath($result, $path)
+  {
+    $fields = explode('.', $result);
+
+    foreach($fields as $field)
+    {
+      if(isset($result->$field))
+      {
+        $result = $result->$field;
+      }
+      else
+      {
+        $result = null;
+        break;
+      }
+    }
+
+    return $result;
   }
 }

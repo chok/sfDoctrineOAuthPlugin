@@ -49,7 +49,10 @@ class sfOAuth1 extends sfOAuth
   }
 
   //nothing to initialize
-  protected function initialize($config) {}
+  protected function initialize($config)
+  {
+    parent::initialize($config);
+  }
 
   /**
    * getter $consumer
