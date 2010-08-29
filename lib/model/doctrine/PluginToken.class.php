@@ -73,4 +73,9 @@ abstract class PluginToken extends BaseToken
 
     $this->setParams($params);
   }
+
+  public static function getAllStatuses()
+  {
+    return array(self::STATUS_REQUEST, self::STATUS_ACCESS);
+  }
 }
