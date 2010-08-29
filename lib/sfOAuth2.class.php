@@ -101,15 +101,6 @@ class sfOAuth2 extends sfOAuth
   }
 
   /**
-   * (non-PHPdoc)
-   * @see plugins/sfDoctrineOAuthPlugin/lib/sfOAuth::connect()
-   */
-  public function connect($user, $parameters = array())
-  {
-    $this->requestAuth($parameters);
-  }
-
-  /**
    * overriden to support OAuth 2
    *
    * @author Maxime Picaud

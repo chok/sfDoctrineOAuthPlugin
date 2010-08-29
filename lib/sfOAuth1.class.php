@@ -226,20 +226,6 @@ class sfOAuth1 extends sfOAuth
   }
 
   /**
-   * (non-PHPdoc)
-   * @see plugins/sfDoctrineOAuthPlugin/lib/sfOAuth::connect()
-   */
-  public function connect($user, $auth_parameters = array(), $request_parameters = array())
-  {
-    $token = $this->getRequestToken($request_parameters);
-
-    //store token in the user session
-    $user->setAttribute($this->getName().'_'.Token::STATUS_REQUEST.'_token', serialize($token));
-
-    $this->requestAuth($auth_parameters);
-  }
-
-  /**
    * overriden for OAuth 1
    *
    * @author Maxime Picaud

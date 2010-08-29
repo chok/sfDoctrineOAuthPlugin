@@ -209,17 +209,6 @@ abstract class sfOAuth
   abstract public function getAccessToken($verifier, $parameters = array());
 
   /**
-   *
-   * @param sfMelodyUser $user
-   *
-   * Allow to connect an user to this service
-   *
-   * @author Maxime Picaud
-   * @since 21 août 2010
-   */
-  abstract public function connect($user, $parameters = array());
-
-  /**
    * Identifier is used to create user with unique name. must be override in child classes
    * to have user id of the service for example
    *
