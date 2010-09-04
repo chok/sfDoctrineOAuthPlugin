@@ -81,7 +81,7 @@ class PluginTokenTable extends Doctrine_Table
     $q->execute();
   }
 
-  public function findByNameAndIdentifier($name, $identifier)
+  public function findOneByNameAndIdentifier($name, $identifier)
   {
     $q = $this->createQuery('t')
               ->where('t.name = ?', $name)

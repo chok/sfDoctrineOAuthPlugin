@@ -351,6 +351,11 @@ abstract class sfOAuth
     $this->token = $token;
   }
 
+  public function getConfigParameter($key, $default = null)
+  {
+    return isset($this->config[$key])?$this->config[$key]:$default;
+  }
+
   /**
    * getter $config
    *
@@ -771,7 +776,10 @@ abstract class sfOAuth
    */
   public function addCallParameters($parameters)
   {
-    $this->call_parameters = array_merge($this->call_parameters, $parameters);
+    if(is_array($parameters))
+    {
+      $this->call_parameters = array_merge($this->call_parameters, $parameters);
+    }
   }
 
   /**
@@ -1088,7 +1096,7 @@ abstract class sfOAuth
 
   public function fromPath($result, $path)
   {
-    $fields = explode('.', $result);
+    $fields = explode('.', $path);
 
     foreach($fields as $field)
     {
