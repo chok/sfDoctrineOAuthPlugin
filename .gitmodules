@@ -1,0 +1,3 @@
+[submodule "lib/base"]
+	path = lib/base
+	url = git://github.com/chok/OAuthBase.git
