@@ -13,7 +13,7 @@ Token:
     params: clob
     identifier: string(255)
     status: string(127)
-    o_auth_version: integer(2)
+    o_auth_version: string(15)
   relations: 
     User:
       class: sfGuardUser
